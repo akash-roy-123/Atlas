@@ -1,3 +1,5 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
-  - helm/apps/argocd-ingress.yaml
-  - configmaps/argocd/argocd-cmd-params-cm.yaml
+  - apps/argocd-ingress.yaml
