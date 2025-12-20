@@ -5,8 +5,18 @@ metadata:
   namespace: argocd
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: {{ .Values.entrypoint | quote }}
+    cert-manager.io/cluster-issuer: {{ .Values.tls.issuer | quote }}
+    {{- if .Values.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.tls.issuer | quote }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingressClassName | quote }}
+  {{- if .Values.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.host | quote }}
+      secretName: {{ .Values.tls.secretName | quote }}
+  {{- end }}
   rules:
     - host: {{ .Values.host | quote }}
       http:

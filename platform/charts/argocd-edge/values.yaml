@@ -4,3 +4,13 @@ entrypoint: web
 
 # Local-only. This stops Argo from forcing HTTPS.
 serverInsecure: true
+host: argocd.local
+ingressClassName: traefik
+entrypoint: websecure
+
+tls:
+  enabled: true
+  secretName: argocd-tls
+  issuer: selfsigned-cluster-issuer
+
+serverInsecure: false
