@@ -1,3 +1,2 @@
 resources:
   - apps/argocd-ingress.yaml
-  - ../configmaps/argocd/argocd-cmd-params-cm.yaml
