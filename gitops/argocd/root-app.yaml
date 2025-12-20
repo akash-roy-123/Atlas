@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/akash-roy-123/Atlas.git
     targetRevision: main
-    path: platform
+    path: platform/helm
   destination:
     server: https://kubernetes.default.svc
     namespace: platform
