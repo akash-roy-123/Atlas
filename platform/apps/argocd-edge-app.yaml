@@ -1,20 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: platform-root
+  name: argocd-edge
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/akash-roy-123/Atlas.git
     targetRevision: main
-    path: platform/apps
+    path: platform/charts/argocd-edge
+    helm:
+      valueFiles:
+        - values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: platform
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
