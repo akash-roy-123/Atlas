@@ -1,0 +1,3 @@
+resources:
+  - helm
+  - configmaps/argocd/argocd-cmd-params-cm.yaml
