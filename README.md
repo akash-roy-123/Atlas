@@ -6,6 +6,20 @@ Local Internal Developer Platform built with Kubernetes, GitOps, and Helm.
 
 ## Overview
 
+This project is a demonstration of building an internal platform that helps software teams deploy, run, and operate applications without needing to understand or manage infrastructure details.
+
+The platform acts as a shared foundation that provides:
+- A secure environment where applications can run
+- A single control panel to deploy and manage services
+- Built-in networking, security, and observability
+- Standardized ways to release and operate software
+
+Instead of each team solving these problems independently, the platform centralizes them and exposes simple, repeatable workflows. While this implementation runs locally for learning and demonstration purposes, the architecture mirrors how modern engineering organizations build internal platforms at scale.
+
+---
+
+## Technical Details
+
 This repository demonstrates a **local-first Internal Developer Platform (IDP)** designed using **real-world platform engineering principles**. The focus of this project is not tool installation alone, but building a **stable platform control plane** that is reproducible, Git-driven, and production-shaped, while remaining fully runnable on a developer laptop.
 
 The platform is intentionally designed to surface and document common **GitOps, ingress, and TLS pitfalls**, along with how they were resolved, so others can debug similar issues effectively.
@@ -87,6 +101,79 @@ Argo CD only reconciles resources under `platform/apps`. Any Application defined
 
 ---
 
+## Bootstrap Commands (Executed)
+
+The following commands were executed as part of the one-time bootstrap process. These are intentionally separated from steady-state GitOps operations.
+
+### Local Tool Verification
+```bash
+docker version
+kubectl version --client
+helm version
+k3d version
+git --version
+```
+
+### Kubernetes Cluster Creation (k3d)
+```bash
+k3d cluster create pe-capstone \
+  --servers 1 --agents 2 \
+  --api-port 6550 \
+  -p "80:80@loadbalancer" \
+  -p "443:443@loadbalancer"
+```
+
+Verification:
+```bash
+kubectl get nodes
+kubectl get pods -A
+```
+
+### Argo CD Installation (Bootstrap Only)
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+Initial access:
+```bash
+kubectl -n argocd port-forward svc/argocd-server 8080:443
+```
+
+Retrieve admin password:
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d
+```
+
+### Local DNS Configuration in /etc/hosts
+```text
+127.0.0.1 argocd.local grafana.local backstage.local
+```
+
+### TLS Trust Setup (mkcert)
+```bash
+brew install mkcert nss
+mkcert -install
+mkcert argocd.local
+```
+
+Move the generated certs to a local, non-repo path:
+```bash
+mkdir -p ~/.config/argocd/certs
+mv argocd.local.pem argocd.local-key.pem ~/.config/argocd/certs/
+```
+
+Create Kubernetes TLS secret:
+```bash
+kubectl -n argocd create secret tls argocd-tls \
+  --cert=~/.config/argocd/certs/argocd.local.pem \
+  --key=~/.config/argocd/certs/argocd.local-key.pem
+```
+
+---
+
 ## What Has Been Implemented
 
 ### Kubernetes & GitOps Bootstrap
@@ -117,6 +204,8 @@ Argo CD only reconciles resources under `platform/apps`. Any Application defined
 - mkcert introduced to create a locally trusted Certificate Authority
 - TLS secret replaced with mkcert-generated certificate
 - cert-manager issuance disabled for Argo CD to avoid conflict
+
+The PEM files generated during this step are intentionally kept outside the repo (for example in `~/.config/argocd/certs/`). They exist to establish local trust during development and demonstrate how platform teams solve HTTPS trust issues without weakening security. In production environments, certificates would be issued by a centralized, trusted certificate authority.
 
 ---
 
@@ -180,5 +269,5 @@ The intent is to help others:
 
 ## Final Note
 
-Reaching this point means the platform is no longer “set up” — it is **operated**.  
+Reaching this point means the platform is no longer “set up”, it is **operated**.  
 Everything beyond this stage is capability onboarding, not infrastructure firefighting.
